@@ -422,6 +422,7 @@ table.ct tbody td.mod{max-width:200px;white-space:normal;word-break:break-word}
     <button class="hnav-btn" id="nb-catalogo" onclick="gv('catalogo')">🔍 <span class="hnav-lbl">Catalogo</span></button>
     <button class="hnav-btn" id="nb-celle"    onclick="gv('celle')">⚡ <span class="hnav-lbl">Celle</span></button>
     <button class="hnav-btn" id="nb-storico"  onclick="gv('storico')">📂 <span class="hnav-lbl">Storico</span></button>
+    <button class="hnav-btn" id="nb-trattative" onclick="gv('trattative')">📊 <span class="hnav-lbl">Trattative</span></button>
   </nav>
 </header>
 
@@ -558,12 +559,64 @@ table.ct tbody td.mod{max-width:200px;white-space:normal;word-break:break-word}
   <div class="ct">
     <div class="sto-hdr">
       <h2>📂 Storico Offerte</h2>
-      <button class="btn btn-p" onclick="gv('catalogo')">➕ Nuova Offerta</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn" style="background:#27ae60;color:#fff;font-size:12px" onclick="exportStoriciExcel()">📥 Excel</button>
+        <button class="btn btn-p" onclick="gv('catalogo')">➕ Nuova</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end">
+      <div style="flex:1;min-width:130px">
+        <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:3px">AGENTE</label>
+        <select id="sf-agente" onchange="rsto()" style="width:100%;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px"><option value="">Tutti</option></select>
+      </div>
+      <div style="flex:2;min-width:140px">
+        <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:3px">CLIENTE</label>
+        <input id="sf-cliente" oninput="rsto()" placeholder="Cerca..." style="width:100%;box-sizing:border-box;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+      </div>
+      <div style="min-width:105px">
+        <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:3px">DA</label>
+        <input id="sf-da" type="date" onchange="rsto()" style="width:100%;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:12px">
+      </div>
+      <div style="min-width:105px">
+        <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:3px">A</label>
+        <input id="sf-a" type="date" onchange="rsto()" style="width:100%;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:12px">
+      </div>
+      <button onclick="resetStoFiltri()" style="padding:7px 10px;background:#eee;border:none;border-radius:6px;cursor:pointer;align-self:flex-end">✕</button>
     </div>
     <div id="sto-content"></div>
   </div>
 </div>
 
+
+<!-- ═══ DETTAGLIO TRATTATIVE ═══ -->
+<div class="view" id="view-trattative">
+  <div class="ct">
+    <div class="sto-hdr">
+      <h2>📊 Dettaglio Trattative</h2>
+      <button class="btn" style="background:#27ae60;color:#fff;font-size:12px" onclick="exportTrattativeExcel()">📥 Excel</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end">
+      <div style="flex:1;min-width:130px">
+        <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:3px">AGENTE</label>
+        <select id="tf-agente" onchange="rTrattative()" style="width:100%;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px"><option value="">Tutti</option></select>
+      </div>
+      <div style="flex:2;min-width:140px">
+        <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:3px">CLIENTE</label>
+        <input id="tf-cliente" oninput="rTrattative()" placeholder="Cerca..." style="width:100%;box-sizing:border-box;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+      </div>
+      <div style="min-width:120px">
+        <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:3px">ESITO</label>
+        <select id="tf-esito" onchange="rTrattative()" style="width:100%;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+          <option value="">Tutti</option>
+          <option value="CONFERMATA">✅ Confermate</option>
+          <option value="RIFIUTATA">❌ Rifiutate</option>
+        </select>
+      </div>
+      <button onclick="resetTrattFiltri()" style="padding:7px 10px;background:#eee;border:none;border-radius:6px;cursor:pointer;align-self:flex-end">✕</button>
+    </div>
+    <div id="tratt-content"></div>
+  </div>
+</div>
 
 <!-- ═══ MODAL CELLE SFUSE ═══ -->
 <div class="mov" id="celle-modal">
@@ -668,6 +721,11 @@ table.ct tbody td.mod{max-width:200px;white-space:normal;word-break:break-word}
       <button class="mcl" onclick="cm()">✕</button>
     </div>
     <div class="mbody">
+      <!-- Banner dati tecnici batteria -->
+      <div id="o-tech-banner" style="background:#eef3ff;border:1px solid #b8c8f0;border-radius:8px;padding:10px 14px;margin-bottom:12px">
+        <div style="font-weight:700;color:var(--ibs);font-size:12px;margin-bottom:6px">🔋 Batteria selezionata</div>
+        <div id="o-tech-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:4px 8px;font-size:12px"></div>
+      </div>
       <div class="ms">
         <div class="ms-title">👤 Dati Cliente</div>
         <div class="fr2">
@@ -689,6 +747,10 @@ table.ct tbody td.mod{max-width:200px;white-space:normal;word-break:break-word}
       </div>
       <div class="ms">
         <div class="ms-title">🔋 Dati Applicazione</div>
+        <div class="fr2">
+          <div class="fg2"><label>Marca Carrello</label><input type="text" id="o-mca" placeholder="es. TOYOTA"></div>
+          <div class="fg2"><label>Modello Carrello</label><input type="text" id="o-mod" placeholder="es. 8FBE15T"></div>
+        </div>
         <div class="fr2">
           <div class="fg2"><label>Peso Min. Carrello (kg)</label><input type="number" id="o-pm" placeholder="es. 1360"></div>
           <div class="fg2"><label>Quantità Batterie</label><input type="number" id="o-qty" value="1" min="1" oninput="cp()"></div>
@@ -721,6 +783,10 @@ table.ct tbody td.mod{max-width:200px;white-space:normal;word-break:break-word}
             <div class="ol"><div class="ock" id="ok-tn"></div><span class="on">Tanica 20L</span></div>
             <div class="opw"><input type="number" class="opi" id="pv-tn" value="30" min="0" step="5" onclick="event.stopPropagation()" oninput="cp()"><span style="font-size:10px;color:var(--muted)">€</span></div>
           </div>
+          <div class="oi" id="oi-nd" onclick="to('nd')">
+            <div class="ol"><div class="ock" id="ok-nd"></div><span class="on">Supplemento NON DIN</span></div>
+            <div class="opw"><input type="number" class="opi" id="pv-nd" value="0" min="0" step="5" onclick="event.stopPropagation()" oninput="cp()"><span style="font-size:10px;color:var(--muted)">€</span></div>
+          </div>
         </div>
         <div class="custom-row">
           <div class="ock" id="ok-cu" onclick="to('cu')" style="cursor:pointer;flex-shrink:0;border:2px solid var(--bd)"></div>
@@ -732,6 +798,7 @@ table.ct tbody td.mod{max-width:200px;white-space:normal;word-break:break-word}
           <div class="pr" id="pr-tr" style="display:none"><span class="pl">Trasporto Dedicato</span><span class="pv" id="pd-tr">—</span></div>
           <div class="pr" id="pr-cv" style="display:none"><span class="pl">Kit Cavi e Presa</span><span class="pv" id="pd-cv">—</span></div>
           <div class="pr" id="pr-tn" style="display:none"><span class="pl">Tanica 20L</span><span class="pv" id="pd-tn">—</span></div>
+          <div class="pr" id="pr-nd" style="display:none"><span class="pl">Supplemento NON DIN</span><span class="pv" id="pd-nd">—</span></div>
           <div class="pr" id="pr-cu" style="display:none"><span class="pl" id="pd-cu-n">Optional</span><span class="pv" id="pd-cu">—</span></div>
           <div class="pr ptot"><span class="pl">TOTALE OFFERTA</span><span id="pd-tot">—</span></div>
         </div>
@@ -770,7 +837,7 @@ const CELLE=[{"Tipo":"2PzS100","Ah":100,"Profondita":45,"Larghezza":198,"H_Vaso"
 const CELLE_AH=[46, 64, 69, 84, 92, 96, 100, 110, 115, 120, 122, 126, 128, 130, 138, 140, 142, 150, 160, 161, 165, 168, 170, 172, 180, 183, 184, 192, 195, 200, 207, 210, 213, 216, 220, 224, 225, 230, 240, 244, 250, 252, 255, 256, 258, 260, 270, 275, 280, 284, 288, 294, 300, 310, 315, 320, 324, 325, 330, 336, 340, 344, 345, 350, 360, 375, 378, 385, 390, 400, 420, 430, 432, 440, 450, 455, 460, 465, 480, 495, 500, 516, 520, 525, 540, 550, 560, 575, 585, 600, 602, 620, 625, 630, 640, 648, 650, 675, 688, 690, 700, 720, 735, 750, 756, 774, 775, 800, 805, 810, 840, 860, 864, 875, 900, 920, 930, 945, 972, 980, 1000, 1035, 1050, 1080, 1085, 1120, 1125, 1150, 1250, 1260, 1395, 1400, 1550];
 
 const AGENTI=[
-  {n:"Maurizio Bacilieri",  t:"+39 338 118 7432", m:"maurizio.bacilieri@ibsbatterie.it"},
+  {n:"Ufficio Commerciale", t:"02.21116968",       m:"preventivi@ibsbatterie.it"},
   {n:"Eros Faresi",         t:"+39 335 735 9560", m:"eros.faresi@ibsbatterie.it"},
   {n:"Sebastian Donsossola",t:"+39 377 084 0601", m:"sebastian.dondossola@ibsbatterie.it"},
   {n:"Claudio Speranza",    t:"+39 377 394 6277", m:"claudio.speranza@ibsbatterie.it"},
@@ -782,7 +849,7 @@ const AGENTI=[
 
 /* ═══ STATE ═══ */
 let filt=[], selRow=null, sCol=null, sDir=1;
-let opt={rb:true,tr:false,cv:false,tn:false,cu:false};
+let opt={rb:true,tr:false,cv:false,tn:false,nd:false,cu:false};
 /* Firebase init spostato in script separato */
 
 /* ── stato locale (sincronizzato con Firebase) ── */
@@ -802,6 +869,7 @@ function gv(n){
       const _waitSto=setInterval(()=>{ if(_fbReady){ clearInterval(_waitSto); rsto(); } },300);
     }
   }
+  if(n==='trattative') rTrattative();
   if(n==='celle') { if(document.getElementById('celle-tbody').innerHTML==='') initCelle(); }
   if(n==='home') ust();
 }
@@ -900,19 +968,55 @@ function sb(col){
 
 /* ═══ MODAL ═══ */
 function openModal(){
-  if(!selRow) return;
-  const today=new Date();
+  if(!selRow){ alert('Nessun prodotto selezionato'); return; }
+  // apri modale
+  // Alert revisione cassone
+  var _cc = selRow['Codice Cassone'] || '';
+  var _revRe = /(-\d{2,}|m\d{2,}|[Rr]ev\d+|[Rr]\d{2,})/;
+  if(_revRe.test(_cc)){
+    alert("ATTENZIONE\n\nIl codice cassone \"" + _cc + "\" presenta una revisione.\nPrima di procedere confrontati con Claudio.");
+  }
+  const today = new Date();
   document.getElementById('o-dt').value=today.toISOString().split('T')[0];
   document.getElementById('o-base').value=selRow['NUOVO Q3']!==''?Number(selRow['NUOVO Q3']).toFixed(2):0;
   // reset campi cliente/offerta
   document.getElementById('o-cli').value='';
   document.getElementById('o-rif').value='';
-  document.getElementById('o-pm').value='';
+  document.getElementById('o-mca').value='';
+  document.getElementById('o-mod').value='';
+  // Peso Min: estrai numero dal dato Excel
+  var _pmRaw = selRow['Peso Min'] || '';
+  var _pmNum = _pmRaw ? String(_pmRaw).replace(/[^0-9]/g, '') : '';
+  document.getElementById('o-pm').value = _pmNum || '';
+  // Marca e Modello carrello: precompila dal catalogo (ma editabile)
+  document.getElementById('o-mca').value = selRow['Marca'] || '';
+  document.getElementById('o-mod').value = selRow['Modello'] || '';
+  // Banner dati tecnici
+  var _fields = [
+    ['Marca', selRow['Marca'] || '-'],
+    ['Modello', selRow['Modello'] || '-'],
+    ['Codice', selRow['Codice'] || '-'],
+    ['Cassone', selRow['Codice Cassone'] || '-'],
+    ['V', selRow['V'] || '-'],
+    ['Ah', selRow['Ah'] || '-'],
+    ['Elementi', selRow['Elementi'] || '-'],
+    ['L x P x H', (selRow['L']||'-') + 'x' + (selRow['P']||'-') + 'x' + (selRow['H']||'-')],
+    ['DIN', selRow['DIN'] || '-'],
+    ['Tipo', selRow['Tipo Batteria'] || '-'],
+    ['Peso Min.', _pmRaw || '-']
+  ];
+  var _tg = document.getElementById('o-tech-grid');
+  if(_tg) _tg.innerHTML = _fields.map(function(f){
+    return '<div><span style="color:#888;font-size:10px;display:block">' + f[0] + '</span><strong>' + f[1] + '</strong></div>';
+  }).join('');
   document.getElementById('o-qty').value=1;
   document.getElementById('o-ric').value=0;
   document.getElementById('o-arr').value=0;
   document.getElementById('o-no').value='';
-  document.getElementById('o-co').value='Entro 12gg lavorativi';
+  // Consegna automatica in base a DIN
+  var _din = selRow['DIN'] || '';
+  var _consegna = _din === 'SI' ? 'Entro 7-8gg lavorativi' : 'Entro 15gg lavorativi';
+  document.getElementById('o-co').value = _consegna;
   document.getElementById('o-pg').value='Da Concordare';
   document.getElementById('o-ga').value='24 mesi';
   document.getElementById('o-va').value='30gg';
@@ -920,10 +1024,12 @@ function openModal(){
   document.getElementById('o-ag').value='Nicola Zabbeni'; oac();
   scvp();
   // reset opts
-  opt={rb:true,tr:false,cv:false,tn:false,cu:false};
-  ['rb','tr','cv','tn'].forEach(k=>{
-    document.getElementById('oi-'+k).classList.toggle('chk',opt[k]);
-    document.getElementById('ok-'+k).textContent=opt[k]?'✓':'';
+  opt={rb:true,tr:false,cv:false,tn:false,nd:false,cu:false};
+  ['rb','tr','cv','tn','nd'].forEach(k=>{
+    const _oi=document.getElementById('oi-'+k);
+    const _ok=document.getElementById('ok-'+k);
+    if(_oi) _oi.classList.toggle('chk',opt[k]);
+    if(_ok) _ok.textContent=opt[k]?'✓':'';
   });
   const okcu=document.getElementById('ok-cu');
   okcu.textContent=''; okcu.style.background=''; okcu.style.borderColor='var(--bd)';
@@ -935,7 +1041,16 @@ function cm(){document.getElementById('modal').className='mov';}
 // Chiudi modal toccando sfondo su mobile
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('modal').addEventListener('click',function(e){
-    if(e.target===this) cm();
+    if(e.target===this){
+      if(confirm("Vuoi uscire dall'offerta?\nI dati non salvati andranno persi.")) cm();
+    }
+  });
+  // Conferma anche per modal celle
+  const cm2=document.getElementById('celle-modal');
+  if(cm2) cm2.addEventListener('click',function(e){
+    if(e.target===this){
+      if(confirm("Vuoi uscire dall'offerta?\nI dati non salvati andranno persi.")) ccm();
+    }
   });
 });
 function uon(){
@@ -960,6 +1075,24 @@ function scvp(){
 
 /* ═══ OPTS ═══ */
 function to(k){
+  if(k==='nd'){
+    opt.nd=!opt.nd;
+    const oknd=document.getElementById('ok-nd');
+    if(oknd){ oknd.textContent=opt.nd?'✓':''; oknd.style.background=opt.nd?'var(--ibs)':''; oknd.style.borderColor=opt.nd?'var(--ibs)':'var(--bd)'; oknd.style.color='#fff'; }
+    const oi=document.getElementById('oi-nd');
+    if(oi) oi.classList.toggle('chk', opt.nd);
+    // Aggiorna consegna in base a DIN + Supplemento
+    if(selRow){
+      var _d=selRow['DIN']||'';
+      var _co=document.getElementById('o-co');
+      if(_co){
+        if(_d==='SI') _co.value='Entro 7-8gg lavorativi';
+        else if(opt.nd) _co.value='Entro 20-25gg lavorativi';
+        else _co.value='Entro 15gg lavorativi';
+      }
+    }
+    cp(); return;
+  }
   if(k==='cu'){
     opt.cu=!opt.cu;
     const ok=document.getElementById('ok-cu');
@@ -983,7 +1116,7 @@ function cp(){
   const bat=arrStep>0?Math.ceil(bat0/arrStep)*arrStep:bat0;
   document.getElementById('pd-qty').textContent=qty;
   let tot=bat;
-  [{k:'tr',id:'tr'},{k:'cv',id:'cv'},{k:'tn',id:'tn'}].forEach(({k,id})=>{
+  [{k:'tr',id:'tr'},{k:'cv',id:'cv'},{k:'tn',id:'tn'},{k:'nd',id:'nd'}].forEach(({k,id})=>{
     const pv=parseFloat(document.getElementById('pv-'+id).value)||0;
     const row=document.getElementById('pr-'+id);
     if(opt[k]){tot+=pv;document.getElementById('pd-'+id).textContent=fm(pv);row.style.display='';}
@@ -1010,7 +1143,7 @@ function bof(){
   const _bat0=base*(1+ric/100)*qty;
   const prezzoBat=arr>0?Math.ceil(_bat0/arr)*arr:_bat0;
   let extras=[];
-  [{k:'tr',n:'Trasporto Dedicato'},{k:'cv',n:'Kit Cavi e Presa'},{k:'tn',n:'Tanica 20L'}].forEach(({k,n})=>{
+  [{k:'tr',n:'Trasporto Dedicato'},{k:'cv',n:'Kit Cavi e Presa'},{k:'tn',n:'Tanica 20L'},{k:'nd',n:'Supplemento NON DIN'}].forEach(({k,n})=>{
     if(opt[k]){const p=parseFloat(document.getElementById('pv-'+k).value)||0; extras.push({name:n,price:p});}
   });
   if(opt.cu){const cp=parseFloat(document.getElementById('pv-cu').value)||0; const cn=document.getElementById('pv-cu-n').value||'Optional'; extras.push({name:cn,price:cp});}
@@ -1018,6 +1151,7 @@ function bof(){
   return {
     id:Date.now(), numero:gv2('o-nr'), data:gv2('o-dt'), cliente:gv2('o-cli'), rif:gv2('o-rif'),
     agente:gv2('o-ag'), tel:gv2('o-tel'), email:gv2('o-mail'), pesomin:gv2('o-pm'),
+    marcaCarrello:gv2('o-mca'), modelloCarrello:gv2('o-mod'),
     qty,base,ric,arr,prezzoBat,extras,total,
     consegna:gv2('o-co'), pagamento:gv2('o-pg'), garanzia:gv2('o-ga'), validita:gv2('o-va'), note:gv2('o-no'),
     priceCavi:parseFloat(document.getElementById('pv-cv').value)||0,
@@ -1038,28 +1172,247 @@ function saveOffer(){
   if(!gv2('o-cli').trim()){alert('Inserisci il nome del cliente!');return;}
   incCtr(); const o=bof();
   const _si=offers.findIndex(x=>x.numero===o.numero);
-  if(_si>=0) offers[_si]=o; else offers.unshift(o);
+  if(_si>=0){ o.id=offers[_si].id; offers[_si]=o; } else offers.unshift(o);
   fbSaveOffer(o);
   ust(); alert(`✅ Offerta ${o.numero} salvata!`);
 }
 
 /* ═══ STORICO ═══ */
+/* ═══ STORICO FILTRI + ESITO + TRATTATIVE ═══ */
+
+function normCliente(s){
+  return (s||'').toUpperCase()
+    .replace(/S\.R\.L\.|S\.P\.A\.|S\.N\.C\.|S\.A\.S\./g,'')
+    .replace(/[^A-Z0-9]/g,' ').replace(/ +/g,' ').trim();
+}
+
+function populateAgentFilters(){
+  var ags = [];
+  [].concat(offers, celleOffers).forEach(function(o){ if(o.agente && ags.indexOf(o.agente)<0) ags.push(o.agente); });
+  ags.sort();
+  ['sf-agente','tf-agente'].forEach(function(id){
+    var sel=document.getElementById(id); if(!sel) return;
+    var cur=sel.value;
+    sel.innerHTML='<option value="">Tutti</option>';
+    ags.forEach(function(a){ var op=document.createElement('option'); op.value=op.textContent=a; sel.appendChild(op); });
+    sel.value=cur;
+  });
+}
+
+function resetStoFiltri(){
+  ['sf-agente','sf-cliente','sf-da','sf-a'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  rsto();
+}
+
+function resetTrattFiltri(){
+  ['tf-agente','tf-cliente','tf-esito'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  rTrattative();
+}
+
+function exportStoriciExcel(){
+  var fAg=(document.getElementById('sf-agente')||{}).value||'';
+  var fCl=normCliente((document.getElementById('sf-cliente')||{}).value||'');
+  var fDa=(document.getElementById('sf-da')||{}).value||'';
+  var fA=(document.getElementById('sf-a')||{}).value||'';
+  var all=[];
+  offers.forEach(function(o,i){ all.push(Object.assign({},o,{_idx:i,_tipo:'bat'})); });
+  celleOffers.forEach(function(o,i){ all.push(Object.assign({},o,{_idx:i,_tipo:'celle'})); });
+  all.sort(function(a,b){return b.id-a.id;});
+  if(fAg) all=all.filter(function(o){return o.agente===fAg;});
+  if(fCl) all=all.filter(function(o){return normCliente(o.cliente).indexOf(fCl)>=0;});
+  if(fDa) all=all.filter(function(o){return (o.data||'')>=fDa;});
+  if(fA)  all=all.filter(function(o){return (o.data||'')<=fA;});
+  var rows=all.map(function(o){
+    return {'Nr. Offerta':o.numero,'Data':o.data,'Agente':o.agente,'Cliente':o.cliente||'',
+      'Rif.':o.rif||'','Tipo':o._tipo==='celle'?'Celle':'Batteria',
+      'Prodotto':o._tipo==='celle'?(o.cella?o.cella.Tipo:''):(o.prodotto?o.prodotto.Marca+' '+o.prodotto.Modello:''),
+      'Totale (EUR)':o.total||0,'Esito':o.esito||''};
+  });
+  if(!rows.length){alert('Nessun dato');return;}
+  var ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=[{wch:16},{wch:12},{wch:18},{wch:24},{wch:16},{wch:10},{wch:28},{wch:12},{wch:12}];
+  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Offerte');
+  XLSX.writeFile(wb,'Storico_IBS_'+new Date().toISOString().split('T')[0]+'.xlsx');
+}
+
+function exportTrattativeExcel(){
+  var fAg=(document.getElementById('tf-agente')||{}).value||'';
+  var fCl=normCliente((document.getElementById('tf-cliente')||{}).value||'');
+  var fEs=(document.getElementById('tf-esito')||{}).value||'';
+  var motivoLabel={PREZZO_BASSO:'Prezzo più basso',PIU_CARI:'Siamo più cari',SCADUTA:'Scaduta',RIMANDATO:'Rimandato'};
+  var all=[];
+  offers.forEach(function(o,i){ if(o.esito) all.push(Object.assign({},o,{_idx:i,_tipo:'bat'})); });
+  celleOffers.forEach(function(o,i){ if(o.esito) all.push(Object.assign({},o,{_idx:i,_tipo:'celle'})); });
+  all.sort(function(a,b){return b.id-a.id;});
+  if(fAg) all=all.filter(function(o){return o.agente===fAg;});
+  if(fCl) all=all.filter(function(o){return normCliente(o.cliente).indexOf(fCl)>=0;});
+  if(fEs) all=all.filter(function(o){return o.esito===fEs;});
+  var rows=all.map(function(o){
+    var pConc=o.esitoRif&&o.esitoRif.prezzoConc?o.esitoRif.prezzoConc:'';
+    var cariStr=o.esitoRif&&o.esitoRif.cariVal?(o.esitoRif.cariVal+' '+o.esitoRif.cariTipo):'';
+    return {'Nr. Offerta':o.numero,'Data':o.data,'Agente':o.agente,'Cliente':o.cliente||'',
+      'Tipo':o._tipo==='celle'?'Celle':'Batteria',
+      'Prodotto':o._tipo==='celle'?(o.cella?o.cella.Tipo:''):(o.prodotto?o.prodotto.Marca+' '+o.prodotto.Modello:''),
+      'Totale Offerta':o.total||0,'Esito':o.esito||'',
+      'Totale Confermato':o.esitoConf?o.esitoConf.totale:'',
+      'Data Conferma':o.esitoConf?o.esitoConf.data:'',
+      'Motivo Rifiuto':o.esitoRif?(motivoLabel[o.esitoRif.motivo]||o.esitoRif.motivo):'',
+      'Prezzo Conc. (EUR)':pConc,'Differenza':cariStr,
+      'Note':o.esitoConf?o.esitoConf.note:(o.esitoRif?o.esitoRif.note:'')};
+  });
+  if(!rows.length){alert('Nessuna trattativa da esportare');return;}
+  var ws=XLSX.utils.json_to_sheet(rows);
+  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Trattative');
+  XLSX.writeFile(wb,'Trattative_IBS_'+new Date().toISOString().split('T')[0]+'.xlsx');
+}
+
+/* ── Esito ── */
+var _esitoIdx=null, _esitoIsCelle=false, _esitoType=null;
+
+function openEsito(i, isCelle){
+  _esitoIdx=i; _esitoIsCelle=isCelle; _esitoType=null;
+  var o=isCelle?celleOffers[i]:offers[i]; if(!o) return;
+  document.getElementById('esito-conf-section').style.display='none';
+  document.getElementById('esito-rif-section').style.display='none';
+  document.getElementById('esito-save-btn').style.display='none';
+  document.querySelectorAll('[name="rif-motivo"]').forEach(function(r){r.checked=false;});
+  document.getElementById('rif-prezzo-detail').style.display='none';
+  document.getElementById('rif-cari-detail').style.display='none';
+  ['eb-conf','eb-rif'].forEach(function(id){
+    var b=document.getElementById(id); b.style.background='#fff'; b.style.borderColor='#ddd'; b.style.color='#333';
+  });
+  var sub=isCelle?(o.cella?o.cella.Tipo+' x'+o.qty:'—'):(o.prodotto?o.prodotto.Marca+' '+o.prodotto.Modello:'—');
+  document.getElementById('esito-subtitle').textContent=(o.numero||'')+' · '+(o.cliente||'—')+' · '+sub;
+  document.getElementById('ec-totale').value=(o.esitoConf&&o.esitoConf.totale)||o.total||'';
+  document.getElementById('ec-data').value=(o.esitoConf&&o.esitoConf.data)||new Date().toISOString().split('T')[0];
+  document.getElementById('ec-consegna').value=(o.esitoConf&&o.esitoConf.consegna)||o.consegna||'';
+  document.getElementById('ec-pagamento').value=(o.esitoConf&&o.esitoConf.pagamento)||o.pagamento||'';
+  document.getElementById('ec-note').value=(o.esitoConf&&o.esitoConf.note)||'';
+  if(o.esitoRif){
+    var r=document.querySelector('[name="rif-motivo"][value="'+o.esitoRif.motivo+'"]');
+    if(r){r.checked=true; showRifDetails(o.esitoRif.motivo);}
+    document.getElementById('rif-prezzo-val').value=o.esitoRif.prezzoConc||'';
+    document.getElementById('rif-cari-val').value=o.esitoRif.cariVal||'';
+    document.getElementById('rif-cari-tipo').value=o.esitoRif.cariTipo||'€';
+    document.getElementById('rif-note').value=o.esitoRif.note||'';
+  }
+  if(o.esito) setEsitoType(o.esito);
+  document.getElementById('esito-modal').style.display='flex';
+}
+
+function setEsitoType(type){
+  _esitoType=type;
+  var isConf=type==='CONFERMATA';
+  document.getElementById('esito-conf-section').style.display=isConf?'block':'none';
+  document.getElementById('esito-rif-section').style.display=isConf?'none':'block';
+  document.getElementById('esito-save-btn').style.display='inline-block';
+  var cb=document.getElementById('eb-conf'), rb=document.getElementById('eb-rif');
+  if(isConf){ cb.style.background='#27ae60'; cb.style.borderColor='#27ae60'; cb.style.color='#fff';
+    rb.style.background='#fff'; rb.style.borderColor='#ddd'; rb.style.color='#333'; }
+  else { rb.style.background='#e74c3c'; rb.style.borderColor='#e74c3c'; rb.style.color='#fff';
+    cb.style.background='#fff'; cb.style.borderColor='#ddd'; cb.style.color='#333'; }
+}
+
+function showRifDetails(val){
+  document.getElementById('rif-prezzo-detail').style.display=val==='PREZZO_BASSO'?'block':'none';
+  document.getElementById('rif-cari-detail').style.display=val==='PIU_CARI'?'block':'none';
+  document.getElementById('esito-save-btn').style.display='inline-block';
+}
+
+function closeEsito(){ document.getElementById('esito-modal').style.display='none'; }
+
+function saveEsito(){
+  if(!_esitoType){alert('Seleziona un esito');return;}
+  var arr=_esitoIsCelle?celleOffers:offers;
+  var o=arr[_esitoIdx]; if(!o) return;
+  o.esito=_esitoType;
+  if(_esitoType==='CONFERMATA'){
+    o.esitoConf={totale:parseFloat(document.getElementById('ec-totale').value)||o.total,
+      data:document.getElementById('ec-data').value,
+      consegna:document.getElementById('ec-consegna').value,
+      pagamento:document.getElementById('ec-pagamento').value,
+      note:document.getElementById('ec-note').value};
+    o.esitoRif=null;
+  } else {
+    var mot=document.querySelector('[name="rif-motivo"]:checked');
+    if(!mot){alert('Seleziona il motivo del rifiuto');return;}
+    o.esitoRif={motivo:mot.value,
+      prezzoConc:mot.value==='PREZZO_BASSO'?parseFloat(document.getElementById('rif-prezzo-val').value)||0:0,
+      cariVal:mot.value==='PIU_CARI'?parseFloat(document.getElementById('rif-cari-val').value)||0:0,
+      cariTipo:document.getElementById('rif-cari-tipo').value,
+      note:document.getElementById('rif-note').value};
+    o.esitoConf=null;
+  }
+  if(_esitoIsCelle) fbSaveCelleOffer(o); else fbSaveOffer(o);
+  closeEsito(); rsto(); rTrattative();
+  alert('Esito salvato!');
+}
+
+/* ── Trattative ── */
+function rTrattative(){
+  var el=document.getElementById('tratt-content'); if(!el) return;
+  populateAgentFilters();
+  var fAg=(document.getElementById('tf-agente')||{}).value||'';
+  var fCl=normCliente((document.getElementById('tf-cliente')||{}).value||'');
+  var fEs=(document.getElementById('tf-esito')||{}).value||'';
+  var motivoLabel={PREZZO_BASSO:'Acquistata a prezzo più basso',PIU_CARI:'Siamo più cari del',SCADUTA:'Offerta scaduta',RIMANDATO:'Rimandato acquisto'};
+  var all=[];
+  offers.forEach(function(o,i){ if(o.esito) all.push(Object.assign({},o,{_idx:i,_tipo:'bat'})); });
+  celleOffers.forEach(function(o,i){ if(o.esito) all.push(Object.assign({},o,{_idx:i,_tipo:'celle'})); });
+  all.sort(function(a,b){return b.id-a.id;});
+  if(fAg) all=all.filter(function(o){return o.agente===fAg;});
+  if(fCl) all=all.filter(function(o){return normCliente(o.cliente).indexOf(fCl)>=0;});
+  if(fEs) all=all.filter(function(o){return o.esito===fEs;});
+  if(!all.length){
+    el.innerHTML='<div class="sto-empty"><div class="ico">📊</div><p>Nessuna trattativa registrata.<br>Usa il pulsante <strong>Esito</strong> nello storico.</p></div>';
+    return;
+  }
+  el.innerHTML='<div class="og-list">'+all.map(function(o){
+    var col=o.esito==='CONFERMATA'?'#27ae60':'#e74c3c';
+    var tot=o.esito==='CONFERMATA'&&o.esitoConf&&o.esitoConf.totale?o.esitoConf.totale:o.total;
+    var detail='';
+    if(o.esito==='CONFERMATA'&&o.esitoConf) detail='<span style="font-size:11px;color:#555">Confermata il '+(o.esitoConf.data||'—')+(o.esitoConf.note?' · '+o.esitoConf.note:'')+'</span>';
+    else if(o.esitoRif){ var m=o.esitoRif.motivo; var ex=''; if(m==='PREZZO_BASSO'&&o.esitoRif.prezzoConc) ex=' — € '+o.esitoRif.prezzoConc; if(m==='PIU_CARI'&&o.esitoRif.cariVal) ex=' — '+o.esitoRif.cariVal+' '+o.esitoRif.cariTipo; detail='<span style="font-size:11px;color:#e74c3c">'+(motivoLabel[m]||m)+ex+'</span>'; }
+    return '<div class="oc" style="border-left:4px solid '+col+'">'
+      +'<div class="oc-main">'
+      +'<div class="oc-nr">'+o.numero+' <span style="background:'+col+';color:#fff;font-size:9px;padding:1px 6px;border-radius:3px;margin-left:4px">'+o.esito+'</span>'+(o._tipo==='celle'?'<span style="background:var(--green);color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px">CELLE</span>':'')+'</div>'
+      +'<div class="oc-cl"><strong>'+(o.cliente||'—')+'</strong>'+(o.rif?' — '+o.rif:'')+'</div>'
+      +'<div class="oc-mt">'+o.data+' · '+o.agente+'<br>'+detail+'</div>'
+      +'</div>'
+      +'<div class="oc-tot"><div class="am">'+fm(tot)+'</div><div class="lb">Totale</div></div>'
+      +'<div class="oc-act">'
+      +'<button class="btn btn-p" onclick="'+(o._tipo==='celle'?'psoC('+o._idx+')':'pso('+o._idx+')')+'">🖨️ PDF</button>'
+      +'<button class="btn" style="background:'+col+';color:#fff" onclick="openEsito('+o._idx+','+(o._tipo==='celle'?'true':'false')+')">✏️</button>'
+      +'</div>'
+      +'</div>';
+  }).join('')+'</div>';
+}
+
+
 function rsto(){
   const el=document.getElementById('sto-content');
   if(!el) return;
-  // Se Firebase non ha ancora risposto, mostra spinner
   if(!_fbReady){
     el.innerHTML=`<div class="sto-empty"><div class="ico">⏳</div><p>Caricamento offerte in corso...</p></div>`;
     return;
   }
+  populateAgentFilters();
+  var fAg=(document.getElementById('sf-agente')||{}).value||'';
+  var fCl=normCliente((document.getElementById('sf-cliente')||{}).value||'');
+  var fDa=(document.getElementById('sf-da')||{}).value||'';
+  var fA=(document.getElementById('sf-a')||{}).value||'';
   if(!offers.length && !celleOffers.length){
     el.innerHTML=`<div class="sto-empty"><div class="ico">📋</div><p>Nessuna offerta salvata.<br>Crea la prima dal Catalogo!</p></div>`;
     return;
   }
-  const allOffers = [
+  let allOffers = [
     ...offers.map((o,i)=>({...o, _idx:i, _tipo:'bat'})),
     ...celleOffers.map((o,i)=>({...o, _idx:i, _tipo:'celle'}))
   ].sort((a,b)=>b.id-a.id);
+  if(fAg) allOffers=allOffers.filter(o=>o.agente===fAg);
+  if(fCl) allOffers=allOffers.filter(o=>normCliente(o.cliente).indexOf(fCl)>=0);
+  if(fDa) allOffers=allOffers.filter(o=>(o.data||'')>=fDa);
+  if(fA)  allOffers=allOffers.filter(o=>(o.data||'')<=fA);
   el.innerHTML=`<div class="og-list">${allOffers.map((o)=>`
     <div class="oc">
       <div class="oc-main">
@@ -1079,7 +1432,7 @@ function rsto(){
       <div class="oc-act">
         <button class="btn btn-p" onclick="${o._tipo==='celle'?'psoC('+o._idx+')':'pso('+o._idx+')'}">🖨️ PDF</button>
         <button class="btn" style="background:var(--ibs);color:#fff" onclick="${o._tipo==='celle'?'editCelleOffer('+o._idx+')':'editOffer('+o._idx+')'}">✏️</button>
-        <button class="btn" style="background:#e67e22;color:#fff" onclick="${o._tipo==='celle'?'openOrdine('+o._idx+',true)':'openOrdine('+o._idx+',false)'}">📋</button>
+        <button class="btn" style="background:${o.esito==='CONFERMATA'?'#27ae60':o.esito==='RIFIUTATA'?'#e74c3c':'#8e44ad'};color:#fff;font-size:11px" onclick="${o._tipo==='celle'?'openEsito('+o._idx+',true)':'openEsito('+o._idx+',false)'}">📊 ${o.esito||'Esito'}</button>
         <button class="btn btn-rd" onclick="${o._tipo==='celle'?'deloC('+o._idx+')':'delo('+o._idx+')'}">🗑️</button>
       </div>
     </div>`).join('')}</div>`;
@@ -1121,6 +1474,8 @@ function editOffer(i){
     document.getElementById('o-cli').value=o.cliente||'';
     document.getElementById('o-rif').value=o.rif||'';
     document.getElementById('o-pm').value=o.pesomin||'';
+    document.getElementById('o-mca').value=o.marcaCarrello||(o.prodotto?o.prodotto.Marca:'')||'';
+    document.getElementById('o-mod').value=o.modelloCarrello||(o.prodotto?o.prodotto.Modello:'')||'';
     document.getElementById('o-qty').value=o.qty||1;
     document.getElementById('o-base').value=o.base||0;
     document.getElementById('o-ric').value=o.ric||0;
@@ -1133,16 +1488,19 @@ function editOffer(i){
     document.getElementById('o-ag').value=o.agente||'Nicola Zabbeni'; oac();
     scvp();
     // ripristina opts
-    opt={rb:false,tr:false,cv:false,tn:false,cu:false};
+    opt={rb:false,tr:false,cv:false,tn:false,nd:false,cu:false};
     if(o.extras) o.extras.forEach(e=>{
       if(e.name==='Rabbocco Centralizzato') opt.rb=true;
       if(e.name==='Trasporto Dedicato') opt.tr=true;
       if(e.name==='Kit Cavi e Presa') opt.cv=true;
       if(e.name==='Tanica 20L') opt.tn=true;
+      if(e.name==='Supplemento NON DIN') opt.nd=true;
     });
-    ['rb','tr','cv','tn'].forEach(k=>{
-      document.getElementById('oi-'+k).classList.toggle('chk',opt[k]);
-      document.getElementById('ok-'+k).textContent=opt[k]?'✓':'';
+    ['rb','tr','cv','tn','nd'].forEach(k=>{
+      const _oi=document.getElementById('oi-'+k);
+      const _ok=document.getElementById('ok-'+k);
+      if(_oi) _oi.classList.toggle('chk',opt[k]);
+      if(_ok) _ok.textContent=opt[k]?'✓':'';
     });
     cp();
     _lastPrintedNr=o.numero;
@@ -1201,14 +1559,20 @@ function doPrint(){
   if(_lastPrintedNr && _lastPrintedNr===curNr){
     const nuovoNr=confirm('Vuoi generare un NUOVO numero offerta?\nScegli OK per nuovo numero, Annulla per mantenere '+curNr);
     if(nuovoNr){ incCtr(); }
+    // Annulla = mantieni numero attuale
   } else {
     incCtr();
   }
   _lastPrintedNr=gv2('o-nr');
   const o=bof();
-  // aggiorna se esiste già, altrimenti inserisci
   const idx=offers.findIndex(x=>x.numero===o.numero);
-  if(idx>=0) offers[idx]=o; else offers.unshift(o);
+  if(idx>=0){
+    const oldId=offers[idx].id;
+    o.id=oldId; // preserva ID originale per non creare duplicati su Firebase
+    offers[idx]=o;
+  } else {
+    offers.unshift(o);
+  }
   fbSaveOffer(o);
   ust(); rp(o); window.print();
 }
@@ -1263,8 +1627,8 @@ function rp(o){
       <th style="width:20%">Peso Batteria IBS</th>
     </tr></thead>
     <tbody><tr>
-      <td>${d?d.Marca:'—'}</td>
-      <td>${d?d.Modello:'—'}</td>
+      <td>${o.marcaCarrello||(d?d.Marca:'—')}</td>
+      <td>${o.modelloCarrello||(d?d.Modello:'—')}</td>
       <td>${pm}</td>
       <td>${d&&d['Peso Batteria IBS']?d['Peso Batteria IBS']:'—'}</td>
     </tr></tbody>
@@ -1312,6 +1676,8 @@ function rp(o){
     </tbody>
   </table>
 
+  ${o.note?'<div style="margin-top:6pt"><div class="thdr-gray">Note</div><div class="sbox" style="font-size:8.5pt;padding:5pt 8pt">'+o.note+'</div></div>':''}
+
   <div class="g"></div>
 
   <!-- CONDIZIONI + OPTIONALS affiancati -->
@@ -1329,8 +1695,8 @@ function rp(o){
       <div class="thdr2">Optionals</div>
       <table>
         <tr><td>Rabbocco Centralizzato</td><td class="r">INCLUSO</td></tr>
-        <tr><td>Kit Cavi e Presa</td><td class="r">${fm(o.priceCavi)}</td></tr>
-        <tr><td>Tanica 20L</td><td class="r">${fm(o.priceTanica)}</td></tr>
+        <tr><td>Kit Cavi e Presa</td><td class="r">${o.extras.some(e=>e.name==='Kit Cavi e Presa')?'INCLUSO':fm(o.priceCavi||0)}</td></tr>
+        <tr><td>Tanica 20L</td><td class="r">${o.extras.some(e=>e.name==='Tanica 20L')?'INCLUSO':fm(o.priceTanica||0)}</td></tr>
         <tr><td colspan="2" style="border:none;height:4pt"></td></tr>
       </table>
     </div>
@@ -1358,7 +1724,7 @@ function rp(o){
     <strong>Industrial Battery Service Italia S.r.l.</strong> &nbsp;|&nbsp;
     Via Venti Settembre, 27 – 20123 Milano (MI) &nbsp;|&nbsp;
     Tel +39 02 2111 6968 – Fax +39 02 8718 1060 &nbsp;|&nbsp;
-    E-mail amministrazione@ibsbatterie.it &nbsp;|&nbsp; P. Iva 08718690962 &nbsp;|&nbsp; www.ibsbatterie.it
+    E-mail preventivi@ibsbatterie.it &nbsp;|&nbsp; P. Iva 08718690962 &nbsp;|&nbsp; www.ibsbatterie.it
   </div>
 
 </div>`;
@@ -1378,7 +1744,8 @@ function calcRabbocco(nElem){
   if(nElem<=24)  return 135;
   if(nElem<=36)  return 200;
   if(nElem<=40)  return 240;
-  return Math.round(nElem * 3.10 * 100) / 100;
+  if(nElem<=48)  return 270;
+  return Math.round(nElem * 5.50 * 100) / 100;
 }
 
 /* ── init celle ── */
@@ -1592,7 +1959,7 @@ function bcof(){
   const rb=calcRabbocco(qty);
   let extras=[];
   if(celleOpt.rb) extras.push({name:'Rabbocco Centralizzato',price:rb,fixed:true});
-  [{k:'tr',n:'Trasporto Dedicato'},{k:'cv',n:'Kit Cavi e Presa'},{k:'tn',n:'Tanica 20L'}].forEach(({k,n})=>{
+  [{k:'tr',n:'Trasporto Dedicato'},{k:'cv',n:'Kit Cavi e Presa'},{k:'tn',n:'Tanica 20L'},{k:'nd',n:'Supplemento NON DIN'}].forEach(({k,n})=>{
     if(celleOpt[k]){const p=parseFloat(document.getElementById('cpv-'+k).value)||0;extras.push({name:n,price:p});}
   });
   if(celleOpt.cu){const cp=parseFloat(document.getElementById('cpv-cu').value)||0;const cn=document.getElementById('cpv-cu-n').value||'Optional';extras.push({name:cn,price:cp});}
@@ -1622,7 +1989,7 @@ function saveCelleOffer(){
   if(!cgv('co-cli').trim()){alert('Inserisci il nome del cliente!');return;}
   incCtrCelle(); const o=bcof();
   const _sciIdx=celleOffers.findIndex(x=>x.numero===o.numero);
-  if(_sciIdx>=0) celleOffers[_sciIdx]=o; else celleOffers.unshift(o);
+  if(_sciIdx>=0){ o.id=celleOffers[_sciIdx].id; celleOffers[_sciIdx]=o; } else celleOffers.unshift(o);
   fbSaveCelleOffer(o);
   ust(); alert(`✅ Offerta celle ${o.numero} salvata!`);
 }
@@ -1633,13 +2000,20 @@ function doCellePrint(){
   if(_lastPrintedNrC && _lastPrintedNrC===curNr){
     const nuovoNr=confirm('Vuoi generare un NUOVO numero offerta?\nScegli OK per nuovo numero, Annulla per mantenere '+curNr);
     if(nuovoNr){ incCtrCelle(); }
+    // Annulla = mantieni numero corrente
   } else {
     incCtrCelle();
   }
   _lastPrintedNrC=cgv('co-nr');
   const o=bcof();
   const idx=celleOffers.findIndex(x=>x.numero===o.numero);
-  if(idx>=0) celleOffers[idx]=o; else celleOffers.unshift(o);
+  if(idx>=0){
+    const oldId=celleOffers[idx].id;
+    o.id=oldId; // preserva ID originale
+    celleOffers[idx]=o;
+  } else {
+    celleOffers.unshift(o);
+  }
   fbSaveCelleOffer(o);
   ust(); rcp(o); window.print();
 }
@@ -1734,7 +2108,7 @@ function rcp(o){
     <strong>Industrial Battery Service Italia S.r.l.</strong> &nbsp;|&nbsp;
     Via Venti Settembre, 27 – 20123 Milano (MI) &nbsp;|&nbsp;
     Tel +39 02 2111 6968 – Fax +39 02 8718 1060 &nbsp;|&nbsp;
-    E-mail amministrazione@ibsbatterie.it &nbsp;|&nbsp; P. Iva 08718690962 &nbsp;|&nbsp; www.ibsbatterie.it
+    E-mail preventivi@ibsbatterie.it &nbsp;|&nbsp; P. Iva 08718690962 &nbsp;|&nbsp; www.ibsbatterie.it
   </div>
 </div>`;
 }
@@ -2109,6 +2483,49 @@ function fbSaveCtr(){
 
 </script>
 
+<!-- ═══ MODAL ESITO ═══ -->
+<div id="esito-modal" style="position:fixed;inset:0;z-index:1100;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)">
+  <div style="background:#fff;border-radius:12px;width:96vw;max-width:580px;max-height:90vh;overflow-y:auto;padding:22px;box-shadow:0 8px 40px rgba(0,0,0,0.25)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <div style="font-size:17px;font-weight:700;color:var(--ibs)">📊 Esito Offerta</div>
+        <div id="esito-subtitle" style="font-size:12px;color:#666;margin-top:2px"></div>
+      </div>
+      <button onclick="closeEsito()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#999">✕</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:18px">
+      <button id="eb-conf" onclick="setEsitoType('CONFERMATA')" style="flex:1;padding:13px;border:2px solid #ddd;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#fff">✅ CONFERMATA</button>
+      <button id="eb-rif" onclick="setEsitoType('RIFIUTATA')" style="flex:1;padding:13px;border:2px solid #ddd;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:#fff">❌ RIFIUTATA</button>
+    </div>
+    <div id="esito-conf-section" style="display:none;background:#f0faf4;border:1px solid #a8d8b4;border-radius:8px;padding:14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:#27ae60;margin-bottom:10px">Valori confermati in trattativa:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:2px">TOTALE (€)</label><input id="ec-totale" type="number" step="0.01" style="width:100%;box-sizing:border-box;padding:7px;border:1px solid #ccc;border-radius:6px;font-size:14px;font-weight:700"></div>
+        <div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:2px">DATA CONFERMA</label><input id="ec-data" type="date" style="width:100%;box-sizing:border-box;padding:7px;border:1px solid #ccc;border-radius:6px;font-size:13px"></div>
+        <div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:2px">CONSEGNA</label><input id="ec-consegna" type="text" style="width:100%;box-sizing:border-box;padding:7px;border:1px solid #ccc;border-radius:6px;font-size:13px"></div>
+        <div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:2px">PAGAMENTO</label><input id="ec-pagamento" type="text" style="width:100%;box-sizing:border-box;padding:7px;border:1px solid #ccc;border-radius:6px;font-size:13px"></div>
+      </div>
+      <div style="margin-top:8px"><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:2px">NOTE</label><textarea id="ec-note" rows="2" style="width:100%;box-sizing:border-box;padding:7px;border:1px solid #ccc;border-radius:6px;font-size:13px;resize:vertical"></textarea></div>
+    </div>
+    <div id="esito-rif-section" style="display:none;background:#fdf0f0;border:1px solid #f0b4b4;border-radius:8px;padding:14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:#e74c3c;margin-bottom:10px">Motivo del rifiuto:</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px;border:1px solid #ddd;border-radius:7px;background:#fff"><input type="radio" name="rif-motivo" value="PREZZO_BASSO" onchange="showRifDetails(this.value)" style="width:16px;height:16px"><span style="font-size:13px;font-weight:600">Acquistata a prezzo più basso</span></label>
+        <div id="rif-prezzo-detail" style="display:none;padding:0 8px 8px 28px"><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:2px">PREZZO CONCORRENTE (€)</label><input id="rif-prezzo-val" type="number" step="0.01" placeholder="es. 3500" style="width:100%;box-sizing:border-box;padding:7px;border:1px solid #ccc;border-radius:6px;font-size:14px"></div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px;border:1px solid #ddd;border-radius:7px;background:#fff"><input type="radio" name="rif-motivo" value="PIU_CARI" onchange="showRifDetails(this.value)" style="width:16px;height:16px"><span style="font-size:13px;font-weight:600">Siamo più cari del</span></label>
+        <div id="rif-cari-detail" style="display:none;padding:0 8px 8px 28px"><div style="display:flex;gap:6px"><input id="rif-cari-val" type="number" step="0.01" placeholder="es. 200" style="flex:1;padding:7px;border:1px solid #ccc;border-radius:6px;font-size:14px"><select id="rif-cari-tipo" style="padding:7px;border:1px solid #ccc;border-radius:6px;font-size:13px"><option>€</option><option>%</option></select></div></div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px;border:1px solid #ddd;border-radius:7px;background:#fff"><input type="radio" name="rif-motivo" value="SCADUTA" onchange="showRifDetails(this.value)" style="width:16px;height:16px"><span style="font-size:13px;font-weight:600">Offerta scaduta</span></label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:9px;border:1px solid #ddd;border-radius:7px;background:#fff"><input type="radio" name="rif-motivo" value="RIMANDATO" onchange="showRifDetails(this.value)" style="width:16px;height:16px"><span style="font-size:13px;font-weight:600">Rimandato acquisto</span></label>
+      </div>
+      <div style="margin-top:10px"><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:2px">NOTE</label><textarea id="rif-note" rows="2" style="width:100%;box-sizing:border-box;padding:7px;border:1px solid #ccc;border-radius:6px;font-size:13px;resize:vertical"></textarea></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="esito-save-btn" onclick="saveEsito()" style="display:none;padding:11px 24px;background:var(--ibs);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">💾 Salva Esito</button>
+      <button onclick="closeEsito()" style="padding:11px 18px;background:#eee;color:#333;border:none;border-radius:8px;font-size:14px;cursor:pointer">Annulla</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ MODAL CONFERMA ORDINE ═══ -->
 <div id="ordine-modal" class="mov" style="position:fixed;inset:0;z-index:1100;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)">
   <div style="background:#fff;border-radius:12px;width:96vw;max-width:860px;max-height:92vh;overflow-y:auto;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.25)">
@@ -2255,6 +2672,8 @@ function forceSyncToFirebase(){
 
   alert('✅ Sincronizzati '+count+' offerte su Firebase Cloud!');
 }
+
+
 
 </script>
 </body>
