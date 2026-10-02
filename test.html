@@ -748,6 +748,10 @@ table.ct tbody td.mod{max-width:200px;white-space:normal;word-break:break-word}
       <div class="ms">
         <div class="ms-title">🔋 Dati Applicazione</div>
         <div class="fr2">
+          <div class="fg2"><label>Marca Carrello</label><input type="text" id="o-mca" placeholder="es. TOYOTA"></div>
+          <div class="fg2"><label>Modello Carrello</label><input type="text" id="o-mod" placeholder="es. 8FBE15T"></div>
+        </div>
+        <div class="fr2">
           <div class="fg2"><label>Peso Min. Carrello (kg)</label><input type="number" id="o-pm" placeholder="es. 1360"></div>
           <div class="fg2"><label>Quantità Batterie</label><input type="number" id="o-qty" value="1" min="1" oninput="cp()"></div>
         </div>
@@ -978,10 +982,15 @@ function openModal(){
   // reset campi cliente/offerta
   document.getElementById('o-cli').value='';
   document.getElementById('o-rif').value='';
+  document.getElementById('o-mca').value='';
+  document.getElementById('o-mod').value='';
   // Peso Min: estrai numero dal dato Excel
   var _pmRaw = selRow['Peso Min'] || '';
   var _pmNum = _pmRaw ? String(_pmRaw).replace(/[^0-9]/g, '') : '';
   document.getElementById('o-pm').value = _pmNum || '';
+  // Marca e Modello carrello: precompila dal catalogo (ma editabile)
+  document.getElementById('o-mca').value = selRow['Marca'] || '';
+  document.getElementById('o-mod').value = selRow['Modello'] || '';
   // Banner dati tecnici
   var _fields = [
     ['Marca', selRow['Marca'] || '-'],
@@ -1032,7 +1041,16 @@ function cm(){document.getElementById('modal').className='mov';}
 // Chiudi modal toccando sfondo su mobile
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('modal').addEventListener('click',function(e){
-    if(e.target===this) cm();
+    if(e.target===this){
+      if(confirm("Vuoi uscire dall'offerta?\nI dati non salvati andranno persi.")) cm();
+    }
+  });
+  // Conferma anche per modal celle
+  const cm2=document.getElementById('celle-modal');
+  if(cm2) cm2.addEventListener('click',function(e){
+    if(e.target===this){
+      if(confirm("Vuoi uscire dall'offerta?\nI dati non salvati andranno persi.")) ccm();
+    }
   });
 });
 function uon(){
@@ -1133,6 +1151,7 @@ function bof(){
   return {
     id:Date.now(), numero:gv2('o-nr'), data:gv2('o-dt'), cliente:gv2('o-cli'), rif:gv2('o-rif'),
     agente:gv2('o-ag'), tel:gv2('o-tel'), email:gv2('o-mail'), pesomin:gv2('o-pm'),
+    marcaCarrello:gv2('o-mca'), modelloCarrello:gv2('o-mod'),
     qty,base,ric,arr,prezzoBat,extras,total,
     consegna:gv2('o-co'), pagamento:gv2('o-pg'), garanzia:gv2('o-ga'), validita:gv2('o-va'), note:gv2('o-no'),
     priceCavi:parseFloat(document.getElementById('pv-cv').value)||0,
@@ -1428,7 +1447,7 @@ function deloC(i){
 }
 function psoC(i){
   if(typeof rcp === 'function') rcp(celleOffers[i]);
-  window.print();
+  smartPrint();
 }
 
 // Funzione per eliminare l'offerta (Cestino)
@@ -1455,6 +1474,8 @@ function editOffer(i){
     document.getElementById('o-cli').value=o.cliente||'';
     document.getElementById('o-rif').value=o.rif||'';
     document.getElementById('o-pm').value=o.pesomin||'';
+    document.getElementById('o-mca').value=o.marcaCarrello||(o.prodotto?o.prodotto.Marca:'')||'';
+    document.getElementById('o-mod').value=o.modelloCarrello||(o.prodotto?o.prodotto.Modello:'')||'';
     document.getElementById('o-qty').value=o.qty||1;
     document.getElementById('o-base').value=o.base||0;
     document.getElementById('o-ric').value=o.ric||0;
@@ -1527,7 +1548,7 @@ function editCelleOffer(i){
 // Funzione per generare il PDF dell'offerta
 function pso(i){
   if(typeof rp === 'function') rp(offers[i]);
-  window.print();
+  smartPrint();
 }
 
 /* ═══ STAMPA ═══ */
@@ -1553,7 +1574,7 @@ function doPrint(){
     offers.unshift(o);
   }
   fbSaveOffer(o);
-  ust(); rp(o); window.print();
+  ust(); rp(o); smartPrint();
 }
 
 function rp(o){
@@ -1606,8 +1627,8 @@ function rp(o){
       <th style="width:20%">Peso Batteria IBS</th>
     </tr></thead>
     <tbody><tr>
-      <td>${d?d.Marca:'—'}</td>
-      <td>${d?d.Modello:'—'}</td>
+      <td>${o.marcaCarrello||(d?d.Marca:'—')}</td>
+      <td>${o.modelloCarrello||(d?d.Modello:'—')}</td>
       <td>${pm}</td>
       <td>${d&&d['Peso Batteria IBS']?d['Peso Batteria IBS']:'—'}</td>
     </tr></tbody>
@@ -1674,8 +1695,8 @@ function rp(o){
       <div class="thdr2">Optionals</div>
       <table>
         <tr><td>Rabbocco Centralizzato</td><td class="r">INCLUSO</td></tr>
-        <tr><td>Kit Cavi e Presa</td><td class="r">${fm(o.priceCavi)}</td></tr>
-        <tr><td>Tanica 20L</td><td class="r">${fm(o.priceTanica)}</td></tr>
+        <tr><td>Kit Cavi e Presa</td><td class="r">${o.extras.some(e=>e.name==='Kit Cavi e Presa')?'INCLUSO':fm(o.priceCavi||0)}</td></tr>
+        <tr><td>Tanica 20L</td><td class="r">${o.extras.some(e=>e.name==='Tanica 20L')?'INCLUSO':fm(o.priceTanica||0)}</td></tr>
         <tr><td colspan="2" style="border:none;height:4pt"></td></tr>
       </table>
     </div>
@@ -1994,7 +2015,7 @@ function doCellePrint(){
     celleOffers.unshift(o);
   }
   fbSaveCelleOffer(o);
-  ust(); rcp(o); window.print();
+  ust(); rcp(o); smartPrint();
 }
 
 /* ── PDF celle ── */
@@ -2095,6 +2116,12 @@ function rcp(o){
 /* ── aggiorna gv per celle ── */
 
 document.querySelectorAll('.fg input[type=text]').forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')af();}));
+
+/* ═══ STAMPA CROSS-DEVICE ═══ */
+function smartPrint(){
+  window.print();
+}
+
 init();
 </script>
 <!-- Firebase SDK - caricato PRIMA di tutto il resto -->
@@ -2349,7 +2376,7 @@ function printOrdine(){
   ${nota?`<div class="thdr-gray" style="margin-top:8pt">Note</div><div style="font-size:9pt;padding:6pt 8pt;border:1px solid #ddd">${nota}</div>`:''}
 </div>`;
   closeOrdine();
-  window.print();
+  smartPrint();
 }
 
 
