@@ -1447,7 +1447,7 @@ function deloC(i){
 }
 function psoC(i){
   if(typeof rcp === 'function') rcp(celleOffers[i]);
-  window.print();
+  smartPrint();
 }
 
 // Funzione per eliminare l'offerta (Cestino)
@@ -1548,7 +1548,7 @@ function editCelleOffer(i){
 // Funzione per generare il PDF dell'offerta
 function pso(i){
   if(typeof rp === 'function') rp(offers[i]);
-  window.print();
+  smartPrint();
 }
 
 /* ═══ STAMPA ═══ */
@@ -1574,7 +1574,7 @@ function doPrint(){
     offers.unshift(o);
   }
   fbSaveOffer(o);
-  ust(); rp(o); window.print();
+  ust(); rp(o); smartPrint();
 }
 
 function rp(o){
@@ -2015,7 +2015,7 @@ function doCellePrint(){
     celleOffers.unshift(o);
   }
   fbSaveCelleOffer(o);
-  ust(); rcp(o); window.print();
+  ust(); rcp(o); smartPrint();
 }
 
 /* ── PDF celle ── */
@@ -2116,6 +2116,43 @@ function rcp(o){
 /* ── aggiorna gv per celle ── */
 
 document.querySelectorAll('.fg input[type=text]').forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')af();}));
+
+/* ═══ STAMPA CROSS-DEVICE ═══ */
+function smartPrint(){
+  const pra = document.getElementById('pra');
+  if(!pra || !pra.innerHTML.trim()){ alert('Nessun contenuto da stampare'); return; }
+
+  const isIOSStandalone = window.navigator.standalone === true;
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
+
+  if(isIOSStandalone){
+    // iOS PWA: smartPrint() non funziona — apri pagina stampa nel browser
+    const styles = Array.from(document.querySelectorAll('style'))
+      .map(s => s.innerText).join('\n');
+    const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+      + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+      + '<style>body{background:#fff;margin:0}' + styles + '</style>'
+      + '</head><body>' + pra.innerHTML
+      + '<script>window.onload=function(){setTimeout(function(){smartPrint();},400);}<\/script>'
+      + '</body></html>';
+    const blob = new Blob([html], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } else if(isIOS || isAndroid){
+    // Browser mobile non-standalone: piccolo delay per assicurare il render
+    setTimeout(() => smartPrint(), 400);
+  } else {
+    // Desktop
+    smartPrint();
+  }
+}
+
 init();
 </script>
 <!-- Firebase SDK - caricato PRIMA di tutto il resto -->
@@ -2370,7 +2407,7 @@ function printOrdine(){
   ${nota?`<div class="thdr-gray" style="margin-top:8pt">Note</div><div style="font-size:9pt;padding:6pt 8pt;border:1px solid #ddd">${nota}</div>`:''}
 </div>`;
   closeOrdine();
-  window.print();
+  smartPrint();
 }
 
 
