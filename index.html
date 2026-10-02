@@ -2119,37 +2119,11 @@ document.querySelectorAll('.fg input[type=text]').forEach(el=>el.addEventListene
 
 /* ═══ STAMPA CROSS-DEVICE ═══ */
 function smartPrint(){
-  const pra = document.getElementById('pra');
-  if(!pra || !pra.innerHTML.trim()){ alert('Nessun contenuto da stampare'); return; }
-
-  const isIOSStandalone = window.navigator.standalone === true;
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
-
-  if(isIOSStandalone){
-    // iOS PWA: smartPrint() non funziona — apri pagina stampa nel browser
-    const styles = Array.from(document.querySelectorAll('style'))
-      .map(s => s.innerText).join('\n');
-    const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-      + '<meta name="viewport" content="width=device-width,initial-scale=1">'
-      + '<style>body{background:#fff;margin:0}' + styles + '</style>'
-      + '</head><body>' + pra.innerHTML
-      + '<script>window.onload=function(){setTimeout(function(){smartPrint();},400);}<\/script>'
-      + '</body></html>';
-    const blob = new Blob([html], {type:'text/html'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.target = '_blank'; a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-  } else if(isIOS || isAndroid){
-    // Browser mobile non-standalone: piccolo delay per assicurare il render
-    setTimeout(() => smartPrint(), 400);
+  const isMobile = /Android|iPad|iPhone|iPod/i.test(navigator.userAgent);
+  if(isMobile){
+    setTimeout(function(){ window.print(); }, 350);
   } else {
-    // Desktop
-    smartPrint();
+    window.print();
   }
 }
 
